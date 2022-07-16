@@ -1,0 +1,101 @@
+from keras.metrics import MAPE
+import pandas as pd
+import numpy as np
+
+from google.colab import files
+uploaded = files.upload()
+
+SpartaScore = pd.read_csv('Condensed Data Set   - Sheet7 (1).csv')
+#SpartaScore=pd.read_csv('/content/Sparta Jump Scores.csv')
+
+TargetVariable=['Sparta score']
+Predictors=['Load t-score', 'Explode t-score', 'Drive t-score']
+
+X=SpartaScore[Predictors].values
+y=SpartaScore[TargetVariable].values
+
+from sklearn.preprocessing import StandardScaler
+PredictorScaler=StandardScaler()
+TargetVariableScaler=StandardScaler()
+
+PredictorScalerFit=PredictorScaler.fit(X)
+TargetVariableScalerFit=TargetVariableScaler.fit(y)
+
+X=PredictorScalerFit.transform(X)
+y=TargetVariableScalerFit.transform(y)
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+print(X_train.shape)
+print(y_train.shape)
+print(X_test.shape)
+print(y_test.shape)
+!pip install tensorflow
+!pip install keras
+
+from keras.models import Sequential
+from keras.layers import Dense
+
+model = Sequential() 
+model.add(Dense(units=3, input_dim=3, kernel_initializer='normal', activation='relu'))
+model.add(Dense(units=3, kernel_initializer='normal', activation='relu'))
+model.add(Dense(1, kernel_initializer='normal'))
+model.compile(loss='mean_squared_error', optimizer= 'adam')
+model.fit(X_train, y_train, batch_size=10, epochs = 30, verbose=1) 
+
+def FunctionFindBestParams (X_train, y_train, X_test, y_test):
+  batch_size_list=[5, 10, 15, 20]
+  epoch_list = [5, 10, 50, 100]
+
+  import pandas as pd
+  SearchResultsData=pd.DataFrame(columns=['Load t-score', 'Explode t-score', 'Drive t-score'])
+  
+  TrialNumber=0
+  for batch_size_trial in batch_size_list:
+    for epochs_trial in epoch_list:
+      TrialNumber+=1
+      model = Sequential ()
+      model.add(Dense(units=3, input_dim=X_train.shape[1], kernel_initializer='normal', activation='relu'))
+      model.add(Dense(units=3, kernel_initializer='normal', activation='relu'))
+      model.add(Dense(1, kernel_initializer='normal'))
+      model.compile(loss='mean_squared_error', optimizer='adam')
+      model.fit(X_train, y_train, batch_size=batch_size_trial, epochs=epochs_trial, verbose=0)
+      MAPE = np.mean(100*(np.abs(y_test-model.predict(X_test))/y_test))
+      print(TrialNumber, 'Parameters:', 'batch_size', batch_size_trial, '-', 'epochs:', epochs_trial, 'Accuracy:', 100-abs(MAPE))
+      SearchResultsData=SearchResultsData.append(pd.DataFrame(data=[[TrialNumber, str(batch_size_trial)+'-'+str(epochs_trial), 100-MAPE]], columns=['TrialNumber', 'Parameters', 'Accuracy'] )) 
+  return (SearchResultsData)
+
+ResultsData=FunctionFindBestParams(X_train, y_train, X_test, y_test)
+%matplotlib inline
+#ResultsData.plot(x='Parameters', y='Accuracy', figsize=(15,4), kind='line')
+
+model.fit(X_train, y_train, batch_size=15, epochs = 5, verbose=0)
+Predictions=model.predict(X_test)
+Predictions=TargetVariableScalerFit.inverse_transform(Predictions)
+y_test_orig=TargetVariableScalerFit.inverse_transform(y_test)
+Test_Data=PredictorScalerFit.inverse_transform(X_test)
+TestingData=pd.DataFrame(data=Test_Data, columns=Predictors) 
+
+TestingData['Sparta score']=y_test_orig
+TestingData['Predicted Sparta score']=Predictions
+TestingData.head()
+
+APE=100*(abs(TestingData['Sparta score']-TestingData['Predicted Sparta score'])/TestingData['Sparta score'])
+TestingData['APE']=APE
+
+print('The Accuracy of ANN Model IS:', 100-np.mean(APE))
+print(TestingData)
+
+#graphing
+import matplotlib.pyplot as plt
+
+xpoints = []
+for i in range(len(Predictions)):
+  xpoints.append(i)
+
+plt.plot(xpoints, y_test_orig, 'or') #actual
+plt.plot(xpoints, Predictions, 'ob') #predictions
+plt.xlabel('Athlete Number', fontsize=17)
+plt.ylabel('Sparta Score', fontsize=17)
+plt.title('Sparta Scores: Predicted vs. Actual', fontsize=15)
+plt.show
