@@ -1,0 +1,44 @@
+import numpy as np 
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.inspection import permutation_importance
+!pip install shap
+import matplotlib.pyplot as plt
+
+SpartaScore=pd.read_csv('/content/Condensed Data Set   - PCA Data Prep (2).csv')
+
+TargetVariable=['InjuryRisk']
+Predictors=['JumpDrive(Relative Concentric Impulse)', 'JumpConcentricImpulse', 'JumpMaxVelocity', 'JumpMaxPower', 'JumpHeight', 'Age', 'GeneralBodyMass', 'JumpMaxChangeinAcceleration', 
+            'JumpMaxAcceleration', 'JumpEccentricImpulse', 
+            'JumpUnweightingTime', 'JumpEccentricTime', 'JumpConcentricTime', 'JumpTimetoTakeOff', 
+            'JumpTimetoMaxAcceleration', 'JumpCountermovementDepth', 'JumpmRSIModifiedReactiveStrengthIndex', 'JumpHeight(Flight Time)', 'JumpLoad(Avg Braking RFD)', 
+            'JumpExplode(Avg Relative Concentric Force)', 'JumpCOPxShiftStart', 'JumpCOPyShiftStart', 'JumpCOPxShiftAcceleration', 'JumpCOPyShiftAcceleration', 
+            'JumpCOPxSwayVelocity', 'JumpCOPySwayVelocity', 'JumpHeightGroup', 'BalanceSway(Sway Velocity Mean)', 'BalanceMultiscaleVerticalEntropy', 'BalanceMultivariateMultiscaleEntropy', 
+            'BalanceControl(Multivariate Multiscale Entropy in XY Plane)', 'BalanceCOPxShift', 'SymmBalanceSway(Sway Velocity Mean)', 'SymmBalanceMultiscaleVerticalEntropy', 
+            'SymmBalanceMultivariateMultiscaleEntropy', 'SymmBalanceControl(Multivariate Multiscale Entropy in XY Plane)', 'SymmBalanceCOPx Shift', 'LeftBalanceSway(Sway Velocity Mean)', 
+            'LeftBalanceMultiscaleVerticalEntropy', 'LeftBalanceMultivariateMultiscaleEntropy', 
+            'LeftBalanceControl(Multivariate Multiscale Entropy in XY Plane)', 'LeftBalanceCOPxShift', 'RightBalanceSway(Sway Velocity Mean)', 'RightBalanceMultiscaleVerticalEntropy', 
+            'RightBalanceMultivariateMultiscaleEntropy', 
+            'RightBalanceControl(Multivariate Multiscale Entropy in XY Plane)', 'RightBalanceCOPxShift', 'BalanceStabilityScore', 'BalanceSwayVelocity2Leg', 
+            'BalanceMultivariateMultiscaleEntropy2Leg', 'BalanceMultivariateMultiscaleEntropyinXYPlane2Leg']
+
+y=SpartaScore[TargetVariable].values
+X=SpartaScore[Predictors].values
+
+
+X_train, X_test, y_train, y_test = train_test_split (X, y, test_size=0.3, random_state=42)
+
+
+rf = RandomForestRegressor(n_estimators=128)
+rf.fit(X_train, y_train)
+
+rf.feature_importances_
+x = rf.feature_importances_ 
+print (x)
+
+plt.barh(Predictors, rf.feature_importances_)
+plt.rcParams["figure.figsize"] = (50,30)
+plt.xlabel('Feature Importance', fontsize=40)
+plt.ylabel('Predictors', fontsize=40)
+plt.title('Feature Importance of Predictors', fontsize=40)
