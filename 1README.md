@@ -1,1 +1,2 @@
-# GSET-Research
+# GSET-Research Injury Prevention and Performance Enhancement B
+#READ ME: The code for our project's random forests and neural networks is stored within this GitHub repository. The base code for all the neural networks and random forests are relatively similar, with adaptions where needed to fit the inputs and datasets. Neural networks were used to predict a specific target variable from a limited set of target variables, and the random forests were used to analyze feature importance for a selected target variable. 
